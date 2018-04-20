@@ -20,13 +20,13 @@
 
   var socket = io();
 
-  socket.on('save user in localstorage', function(data){
-    var ctx = JSON.stringify({user: data.user, color: data.color});
-    console.log(ctx)
-    if(window.localStorage){
-      localStorage.setItem(data.key, ctx)
+  socket.on("save user in localstorage", function(data) {
+    var ctx = JSON.stringify({ user: data.user, color: data.color });
+    console.log(ctx);
+    if (window.localStorage) {
+      localStorage.setItem(data.key, ctx);
     }
-  })
+  });
 
   function userParticipation(joined = True, data) {
     let messageBlock = document.createElement("li");
@@ -45,30 +45,23 @@
       user: tempUser.value
     });
     e.preventDefault();
-  
-
   });
-  socket.on("login temp user", function(data) {
-  
-  });
+  socket.on("login temp user", function(data) {});
 
-  function promptLoginScreen(){
+  function promptLoginScreen() {
     document.querySelector("#tempaccount").style.display = "flex";
     document.querySelector("#chatbar").style.display = "none";
     document.querySelector("#display").style.display = "none";
-  }; 
+  }
 
+  socket.on("check localstorage", function(localStorageKeyNames) {
+    var userData = localStorage.getItem(localStorageKeyNames.temp);
 
-
-  socket.on('check localstorage', function(data) {
-    console.log(data.temp)
-    var data = localStorage.getItem(data.user) || localStorage.getItem(data.temp)
-    console.log(data)
-    if(!data){
-      promptLoginScreen()
-    }else{
-      var data = JSON.parse(data)
-      socket.emit('logged in', data)
+    if (!localStorageKeyNames) {
+      promptLoginScreen();
+    } else {
+      var userData = JSON.parse(userData);
+      socket.emit("logged in", userData);
     }
   });
 
@@ -82,18 +75,19 @@
 
   function typingFunction() {
     typing = false;
-    socket.emit("typing", false);
+    socket.emit("typing", { message: false, typing: typing });
   }
   let timeout;
   messageInput.addEventListener("keyup", function() {
     typing = true;
-    socket.emit("typing");
+    socket.emit("typing", { typing: typing });
     clearTimeout(timeout);
     timeout = setTimeout(typingFunction, 500);
   });
 
   socket.on("typing", function(data) {
     if (data.typing) {
+      console.log("test");
       typingNotification.innerHTML = data.message;
     } else {
       typingNotification.innerHTML = "";
@@ -111,7 +105,7 @@
   });
 
   socket.on("setup user client", function(data) {
-    console.log(data)
+    console.log(data);
     document.querySelector("#tempaccount").style.display = "none";
     document.querySelector("#chatbar").style.display = "flex";
     document.querySelector("#display").style.display = "grid";

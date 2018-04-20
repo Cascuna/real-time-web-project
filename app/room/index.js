@@ -7,7 +7,9 @@ function updateUserList(io, room) {
 }
 
 exports.joinRoom = function joinRoom(io, socket, user, room) {
-  console.log(user);
+  socket.user = user;
+  socket.room = room;
+
   // Ensure a entry of the room is made
   if (!rooms[room]) {
     rooms[room] = [];
@@ -18,7 +20,8 @@ exports.joinRoom = function joinRoom(io, socket, user, room) {
 
   // Signal the users client to configure
   socket.emit("setup user client", {
-    user: user, room: room
+    user: user,
+    room: room
   });
 
   socket.to(room).broadcast.emit("user joined", {
@@ -38,10 +41,8 @@ exports.leaveRoom = function leaveRoom(io, socket, user, room) {
     socket.to(room).broadcast.emit("user left", {
       user: user
     });
-
-    // Remove user from the user room
     rooms[room] = rooms[room].filter(u => u !== user);
-    console.log(rooms[room]);
+
     updateUserList(io, room);
   } catch (e) {
     // TODO: Make a more descriptive error

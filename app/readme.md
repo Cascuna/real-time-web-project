@@ -30,10 +30,11 @@ Reasoning behind this is that I personally find the MVC document structure most 
 
 ## Wish list
 
-[ ] - Private chat groups
-[ ] - Chat history
-[ ] - Accounts (Oauth)
-[ ] - Friends
+- [ ] Listen to your favourite tunes with chat buddies
+- [ ] Private chat groups
+- [ ] Chat history
+- [ ] Accounts (Oauth)
+- [ ] Friends
 
 
 ## Requirements
@@ -51,8 +52,36 @@ Finally
 
 ## Dependencies
 The product has been based upon the socket implementation by of `socket.io`.  
-For the profanity filter i've used [retext-profanity](https://github.com/retextjs/retext-profanities)
+For the profanity filter i've used [retext-profanity] (https://github.com/retextjs/retext-profanities)
+
+### Api's
+To flair up the functionality, i'm using the [spotify api](https://developer.spotify.com/web-api/) through the ever so handy [spotify-web-api-node](https://github.com/thelinmichael/spotify-web-api-node) node package.
 
 ## Internals
 
+### Types of users
+Inside the application there are 2 user types:
+
+#### `temporary user`
+As the name indicates, these are users that want to use the application but didn't want to register yet. They will be limited to the 'base' usage of the application, that is, without the extra functionality the spotify API provides.
+
+#### `Registered user`
+Made the effort to create a account, and is able to use all functionality offered by the web application.
+
+
 ### The handeling of sockets events
+
+
+#### Server side
+
+#### Client Side
+
+##### `socket.on("check localstorage")` 
+###### Params
+`localStorageKeyNames (Required) `: List of LocalStorage namespaces, used to check if these namespaces contain any user information.  
+
+###### Function
+Checks localstorage to see if there is a temporary user in the localstorage. Should only be called if the session is empty & the user has logged in with a [temporary user](#temporary-user) before.
+
+#### `socket.emit("new message")`
+
