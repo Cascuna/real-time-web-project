@@ -10,10 +10,17 @@ function getParameterByName(name, url) {
   return decodeURIComponent(results[2].replace(/\+/g, " "));
 }
 
-socket.emit('spotify user authenticated', {code: getParameterByName('code')})
-
+socket.on("logged in user", function(data) {
+  console.log("test");
+  // var userData = { user: data.username, color: data.color, room: 0 };
+  socket.emit("spotify generate access token", {
+    user: data.username,
+    code: getParameterByName("code")
+  });
+});
+console.log("socket");
 
 window.setTimeout(function() {
   // Move to a new location or you can do something else
   window.location.href = "/";
-}, 300);
+}, 3000);

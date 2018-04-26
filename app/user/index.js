@@ -19,9 +19,8 @@ exports.checkLocalStorage = function checkLocalStorage(socket) {
 function configureBaseUser(io, socket, data, type) {
   socket.color = "hsl(" + Math.random() * 360 + ", 100%, 75%)";
   socket.user = data.user;
-  socket.room = "General";
-  var key =
-    type === "temp" ? localStorageKeyNames.temp : localStorageKeyNames.user;
+  socket.room = socket.room | "General";
+  var key = "temp";
   socket.emit("save user in localstorage", {
     key: key,
     user: data.user,

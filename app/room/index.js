@@ -1,3 +1,4 @@
+"use strict";
 let rooms = {};
 
 function updateUserList(io, room) {
@@ -6,8 +7,18 @@ function updateUserList(io, room) {
   });
 }
 
-exports.joinRoom = function joinRoom(io, socket, user, room) {
+exports.joinRoom = function joinRoom(
+  io,
+  socket,
+  user,
+  room = "General",
+  spotify = false
+) {
   socket.user = user;
+  console.log("oke hij roept dit dus meer dan 1x aan", socket.user);
+  if (socket.room) {
+    socket.leave(socket.room);
+  }
   socket.room = room;
 
   // Ensure a entry of the room is made
@@ -16,17 +27,19 @@ exports.joinRoom = function joinRoom(io, socket, user, room) {
   }
 
   socket.join(room);
-  rooms[room].push(user);
-
-  // Signal the users client to configure
-  socket.emit("setup user client", {
-    user: user,
-    room: room
-  });
+  if (!rooms[room].includes(user)) {
+    rooms[room].push(user);
+  }
 
   socket.to(room).broadcast.emit("user joined", {
     user: user,
     room: room
+  });
+  // Signal the users client to configure
+  socket.emit("setup user client", {
+    user: user,
+    room: room,
+    spotify: spotify
   });
 
   updateUserList(io, room);
@@ -41,6 +54,8 @@ exports.leaveRoom = function leaveRoom(io, socket, user, room) {
     socket.to(room).broadcast.emit("user left", {
       user: user
     });
+
+    console.log(rooms[room]);
     rooms[room] = rooms[room].filter(u => u !== user);
 
     updateUserList(io, room);

@@ -150,3 +150,12 @@ a:hover {
     color: rgba(255,255,255,.83);
     border-bottom: 1px solid #011526;
 }
+
+
+.login-to-spotify {
+    background-image: url("../img/spotify-logo.png");
+    background-size: cover;
+    display: inline-block;
+    width: 50px;
+    height: 50px;
+}

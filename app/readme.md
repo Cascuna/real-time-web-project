@@ -2,17 +2,55 @@
 ![Main image](main-image.png)
 - [Real Time Web](#real-time-web)
     - [Purpose of the app](#purpose-of-the-app)
+    - [Challenges I faced](#challenges-i-faced)
     - [Style of the project](#style-of-the-project)
     - [Feature list](#feature-list)
     - [Wish list](#wish-list)
     - [Requirements](#requirements)
     - [Install guide](#install-guide)
     - [Dependencies](#dependencies)
+        - [Api's](#apis)
     - [Internals](#internals)
+        - [Types of users](#types-of-users)
+            - [`temporary user`](#temporary-user)
+            - [`Registered user`](#registered-user)
+        - [Data](#data)
+            - [Database](#database)
         - [The handeling of sockets events](#the-handeling-of-sockets-events)
+            - [Server Side](#server-side)
+                - [`socket.on('logged in')`](#socketonlogged-in)
+                    - [Params](#params)
+                    - [Function](#function)
+                - [`socket.on('logged in user')`](#socketonlogged-in-user)
+                    - [Params](#params)
+                    - [Function](#function)
+                - [`socket.on('disconnect')`](#socketondisconnect)
+                    - [Params](#params)
+                    - [Function](#function)
+                - [`socket.on('typing')`](#socketontyping)
+                    - [Params](#params)
+                    - [Function](#function)
+                - [`socket.on('setup spotify playlist)`](#socketonsetup-spotify-playlist)
+                    - [Params](#params)
+                - [Function](#function)
+                - [`socket.on('spotify generate access token')`](#socketonspotify-generate-access-token)
+                    - [Params](#params)
+                    - [Function](#function)
+                - [`socket.on('login temp user')`](#socketonlogin-temp-user)
+                    - [Params](#params)
+                    - [Function](#function)
+            - [Server side](#server-side)
+            - [Client Side](#client-side)
+                - [`socket.on("check localstorage")`](#socketoncheck-localstorage)
+                    - [Params](#params)
+                    - [Function](#function)
+            - [`socket.emit("new message")`](#socketemitnew-message)
 
 ## Purpose of the app
 This application aims to offer a solution to real time chat applications. Here you can make your own user groups, see who is online and more.
+
+## Challenges I faced
+The architecture of the project wasn't superB, which introduced allot more bugs as I continued developing. The problem with this is that the whole application is quite buggy, and I haven't really reached the point I want the application to be in. This together with the complexity of getting the access key from a callback really threw me off.
 
 ## Style of the project
 For the general codestyle I decided to adhere to the [google style guide](https://google.github.io/styleguide/jsguide.html). This is because it's fairly new and is a bit different then my current coding style, which is mostly based of the airbnb styleguide. With this i hope to be able to slowly form my own coding style.
@@ -68,9 +106,73 @@ As the name indicates, these are users that want to use the application but didn
 #### `Registered user`
 Made the effort to create a account, and is able to use all functionality offered by the web application.
 
+### Data
+![test](Diagram.png)
+
+
+`SpotifySessionRoomPair`: Saves the meta data of the spotify playlist created for the chatroom. 
+Meta data here means: `playlist_id`
+`UserKeyPairs`: Pairs a users name with his spotify access key.
+
+#### Database
+The only data saved in the database at the moment is the `user` model.
+
 
 ### The handeling of sockets events
 
+#### Server Side
+
+<!-- ##### `socket.on('logged in user')` 
+###### Params
+A session.user object to validate & register in the socket.
+###### Function
+WIP, endpoint that should be called from the server to indicate that the user logged in to a account in the database.  -->
+
+##### `socket.on('logged in')` 
+###### Params
+`user`, `room`
+###### Function
+Joins a room for the user
+
+
+##### `socket.on('logged in user')` 
+###### Params
+A session.user object to validate & register in the socket.
+###### Function
+WIP, endpoint that should be called from the server to indicate that the user logged in to a account in the database. 
+
+##### `socket.on('disconnect')` 
+###### Params
+###### Function
+Removes the current active user belonging to the socket from the active room.
+
+
+##### `socket.on('typing')` 
+###### Params
+A `typing` boolean to indicate the current typing state. 
+###### Function
+if it's true it will emit a `typing` message to all clients in the same room as the typing client.
+
+##### `socket.on('setup spotify playlist)`
+###### Params
+`user`: Name of the user
+`room`: Room the spotify playlist will be created for
+##### Function
+Createsa playlist for the connected user based on the channel name. Currently always creates a playlist, even if there is already a playlist with this name.
+
+
+##### `socket.on('spotify generate access token')`
+###### Params
+The code received from the spotify callback upon a succesful spotify authentication.
+###### Function
+Generates a accesstoken and writes this to the current logged in user.
+
+
+##### `socket.on('login temp user')`
+###### Params
+A `user` and a `room`
+###### Function
+Creates a temporary user & saves his footprint in the socket, and ensures that the data is saved in the client's local storage.
 
 #### Server side
 

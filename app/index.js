@@ -1,20 +1,21 @@
-const express = require("express");
-const nunjucks = require("nunjucks");
+var express = require("express");
+var nunjucks = require("nunjucks");
 var path = require("path");
 var roomFunctions = require("./room/");
 var userFunctions = require("./user/");
 var chatFunctions = require("./chat/");
 var database = require("./db");
-var justatest = {};
 var bodyParser = require("body-parser");
 var session = require("express-session");
 var cookieParser = require("cookie-parser");
+var SpotifyWebApi = require("spotify-web-api-node");
+var userKeyPairs = {};
+var spotifySessionRoomPair = {};
+var User = userFunctions.models.user;
+
 var router = express.Router();
 require("dotenv").config();
-
 database.initDB();
-
-var SpotifyWebApi = require("spotify-web-api-node");
 
 var scopes = [
   "user-read-private",
@@ -32,13 +33,26 @@ var scopes = [
 ];
 
 app = express();
+
+// Configuring the nj path as /templates
+nunjucks.configure("templates", {
+  autoescape: true,
+  express: app
+});
+
+const server = app.listen(3000, "0.0.0.0", () =>
+  console.log("running! on localhost:3000 ")
+);
+
+const io = require("socket.io")(server, {});
+
 app
   .use(bodyParser.urlencoded({ extended: true }))
   .use(cookieParser())
   .use(
     session({
       key: "user_sid",
-      secret: "somerandonstuffs",
+      secret: "54632442365dkfospdir2834shfjkn0248sd",
       resave: false,
       saveUninitialized: false,
       cookie: {
@@ -58,11 +72,32 @@ app
 // middleware function to check for logged-in users
 var sessionChecker = (req, res, next) => {
   if (req.session.user && req.cookies.user_sid) {
-    res.redirect("/dashboard");
+    res.redirect("/");
   } else {
     next();
   }
 };
+
+function checkRequestSession(request) {
+  if (request.session.user) {
+    console.log("hits this", "beneath all the spammmmmmm");
+    io.on("connect", function(socket) {
+      socket.emit("logged in user", request.session.user);
+    });
+  }
+}
+
+function generateSpotifyAPIObject() {
+  return (spotifyApi = new SpotifyWebApi({
+    clientId: process.env.SPOTIFY_CLIENT_ID,
+    clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
+    redirectUri: process.env.SPOTIFY_REDIRECT_URI
+  }));
+}
+
+function generateSpotifyAuthUrl(apiObject = generateSpotifyAPIObject()) {
+  return apiObject.createAuthorizeURL(scopes);
+}
 
 app
   .use(function(req, res, next) {
@@ -71,54 +106,27 @@ app
   })
   .use(express.static(path.join(__dirname, "/static")))
   .get("/", function(request, response) {
-    const ioConnection = request.io;
     if (request.session.user) {
-      ioConnection.emit("logged in user", request.session.user);
+      console.log("hits this", "beneath all the spammmmmmm");
+      io.on("connect", function(socket) {
+        socket.emit("logged in user", request.session.user);
+      });
     }
-    var code = request.query.code || null;
-    response.render("chat.html");
+
+    response.render("chat.html", { auth_url: generateSpotifyAuthUrl() });
   })
 
   .get("/callback", function(request, response) {
-    var code = request.query.code || null;
-
-    spotifyApi.authorizationCodeGrant(code).then(function(data) {
-      console.log("The token expires in " + data.body["expires_in"]);
-      console.log("The access token is " + data.body["access_token"]);
-      console.log("The refresh token is " + data.body["refresh_token"]);
-
-      // Set the access token on the API object to use it in later calls
-      spotifyApi.setAccessToken(data.body["access_token"]);
-      spotifyApi.setRefreshToken(data.body["refresh_token"]);
-
-      // Retrieval of current state
-      spotifyApi.getMyCurrentPlaybackState({}).then(
-        function(data) {
-          // Output items
-          console.log("Now Playing: ", data.body);
-        },
-        function(err) {
-          console.log("Something went wrong!", err);
-        }
-      );
-    });
-    //   Create a cool playlist
-    //     .createPlaylist("mr_vanderwal", "My Cool Playlist", { public: true })
-    //     .then(
-    //       function(data) {
-    //         console.log("Created playlist!");
-    //       },
-    //       function(err) {
-    //         console.log("Something went wrong!", err);
-    //       }
-    //     );
-    // });
-
+    if (request.session.user) {
+      console.log("hits this", "beneath all the spammmmmmm");
+      io.on("connect", function(socket) {
+        socket.emit("logged in user", request.session.user);
+      });
+    }
     response.render("redirect.html");
   })
 
   .get("/register", function(request, response) {
-    var User = userFunctions.models.user;
     database.sequelize
       .sync({ force: true })
       .then(() =>
@@ -130,45 +138,77 @@ app
       )
       .then(user => {
         request.session.user = user.dataValues;
+        request.session.userobj = user;
         response.redirect("/");
       });
   });
 
-// Configuring the nj path as /templates
-nunjucks.configure("templates", {
-  autoescape: true,
-  express: app
-});
-
-const server = app.listen(3000, "0.0.0.0", () =>
-  console.log("running! on localhost:3000 ")
-);
-
-const io = require("socket.io")(server, {});
-
 io.on("connection", socketConnection);
 
 function socketConnection(socket) {
+  console.log("wat the fuck");
   socket.room = "General";
-  console.log("this is a code", justatest[socket.user]);
-  userFunctions.checkLocalStorage(socket);
-  var spotifyApi = new SpotifyWebApi({
-    clientId: process.env.SPOTIFY_CLIENT_ID,
-    clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
-    redirectUri: process.env.SPOTIFY_REDIRECT_URI
+  // userFunctions.checkLocalStorage(socket);
+
+  socket.on("setup spotify playlist", function(data) {
+    var userApi = generateSpotifyAPIObject();
+    userApi.setAccessToken(userKeyPairs[data.user].spotifyCode);
+    userApi.setRefreshToken(userKeyPairs[data.user].spotifyRefresh);
+
+    spotifyApi.createPlaylist("mr_vanderwal", data.room, { public: true }).then(
+      function(data) {
+        console.log("Created playlist!", data);
+        spotifySessionRoomPair[data.room] = { id: data.body.id };
+        console.log(data.body.id);
+      },
+      function(err) {
+        console.log("Something went wrong!", err);
+      }
+    );
   });
 
-  var authorizeURL = spotifyApi.createAuthorizeURL(scopes);
-  console.log(authorizeURL);
+  socket.on("spotify generate access token", function(response) {
+    console.log(response);
+    console.log(userKeyPairs);
+    if (!userKeyPairs[response.user]) {
+      var userApi = generateSpotifyAPIObject();
+      userApi.authorizationCodeGrant(String(response.code)).then(
+        function(data) {
+          console.log("name", response.user);
+          var accessToken = data.body["access_token"];
+          console.log("The token expires in " + data.body["expires_in"]);
+          // console.log("The access token is " + accessToken);
+          // console.log("The refresh token is " + data.body["refresh_token"]);
 
-  socket.on("logged in user", function(data) {
-    console.log("logged in", data);
-  });
+          // // Set the access token on the API object to use it in later calls
+          userKeyPairs[response.user] = {
+            spotifyCode: accessToken,
+            spotifyRefresh: data.body["refresh_token"]
+          };
 
-  socket.on("spotify user authenticated", function(code) {
-    socket.spotify_auth_token = code;
-    justatest[socket.user] = code;
-    console.log(code);
+          userApi.setAccessToken(userKeyPairs[response.user].spotifyCode);
+          userApi.setRefreshToken(userKeyPairs[response.user].spotifyRefresh);
+
+          socket.spotifyCode = userKeyPairs[response.user];
+
+          User.update(
+            { spotify_code: spotifyApi.getAccessToken() },
+            {
+              where: { username: response.user }
+            }
+          ).then(updatedUser => {
+            // project will be the first entry of the Projects table with the title 'aProject' || null
+            // project.title will contain the name of the project
+          });
+        },
+        function(err) {
+          console.log("Something went wrong!", err);
+          console.log("user api object", userApi);
+        }
+      );
+    } else {
+      socket.spotifyCode = userKeyPairs[response.user];
+    }
   });
 
   socket.on("disconnect", function() {
@@ -192,11 +232,36 @@ function socketConnection(socket) {
     userFunctions.configureTempUser(io, socket, data);
   });
 
+  function registerUser(socket, data) {
+    console.log("this is from register user", data.spotifyCode);
+    if (data.spotifyCode) {
+      socket.spotifyCode = data.spotifyCode;
+    }
+  }
+
   socket.on("logged in", function(data) {
-    roomFunctions.joinRoom(io, socket, data.user, "General");
+    console.log("this is from logged in", data.spotifyCode);
+    registerUser(socket, data);
+    // HIER WORDT HIJ ERGENS AANGEROEPEN
+    roomFunctions.joinRoom(io, socket, data.user, data.room | "General");
   });
 
   socket.on("new message", function(data) {
+    if (data.message.includes("!search")) {
+      let query = data.message.replace("!search", "");
+      console.log(data.message.replace("!search", ""));
+      spotifyApi.searchTracks(query).then(
+        function(response) {
+          console.log(
+            "Search tracks by " + query + " in the artist name",
+            response.body
+          );
+        },
+        function(err) {
+          console.log("Something went wrong!", err);
+        }
+      );
+    }
     censoredMessage = chatFunctions.censorProfanity(data, socket);
     io.to(socket.room).emit("new message", {
       message: censoredMessage,
@@ -206,8 +271,24 @@ function socketConnection(socket) {
   });
 
   socket.on("change room", function(data) {
-    roomFunctions.leaveRoom(io, socket, socket.user, socket.room);
     socket.room = data.room;
-    roomFunctions.joinRoom(io, socket, socket.user, socket.room);
+    console.log(userKeyPairs[socket.user]);
+    if (data.spotifyOnly) {
+      console.log(userKeyPairs[socket.user]);
+      if (userKeyPairs[socket.user]) {
+        console.log("dank");
+        roomFunctions.leaveRoom(io, socket, socket.user, socket.room);
+        roomFunctions.joinRoom(io, socket, socket.user, socket.room, true);
+      } else {
+        socket.emit("profane message", {
+          cusswords: [""],
+          message:
+            "You need to have spotify linked to your account to create a spotify listening room"
+        });
+      }
+    } else {
+      roomFunctions.leaveRoom(io, socket, socket.user, socket.room);
+      roomFunctions.joinRoom(io, socket, socket.user, socket.room);
+    }
   });
 }
