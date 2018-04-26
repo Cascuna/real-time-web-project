@@ -39,12 +39,16 @@
                 - [`socket.on('login temp user')`](#socketonlogin-temp-user)
                     - [Params](#params)
                     - [Function](#function)
-            - [Server side](#server-side)
             - [Client Side](#client-side)
                 - [`socket.on("check localstorage")`](#socketoncheck-localstorage)
                     - [Params](#params)
                     - [Function](#function)
-            - [`socket.emit("new message")`](#socketemitnew-message)
+                - [`socket.emit("new message")`](#socketemitnew-message)
+                    - [Params](#params)
+                    - [Functions](#functions)
+                - [`socket.on("typing")`](#socketontyping)
+                    - [Params](#params)
+                    - [Functions](#functions)
 
 ## Purpose of the app
 This application aims to offer a solution to real time chat applications. Here you can make your own user groups, see who is online and more.
@@ -134,7 +138,7 @@ WIP, endpoint that should be called from the server to indicate that the user lo
 ###### Function
 Joins a room for the user
 
-
+setup spotify
 ##### `socket.on('logged in user')` 
 ###### Params
 A session.user object to validate & register in the socket.
@@ -174,16 +178,28 @@ A `user` and a `room`
 ###### Function
 Creates a temporary user & saves his footprint in the socket, and ensures that the data is saved in the client's local storage.
 
-#### Server side
 
 #### Client Side
 
 ##### `socket.on("check localstorage")` 
 ###### Params
-`localStorageKeyNames (Required) `: List of LocalStorage namespaces, used to check if these namespaces contain any user information.  
+`localStorageKeyNames (Required) `: List of LtestocalStorage namespaces, used to check if these namespaces contain any user information.  
 
 ###### Function
 Checks localstorage to see if there is a temporary user in the localstorage. Should only be called if the session is empty & the user has logged in with a [temporary user](#temporary-user) before.
 
-#### `socket.emit("new message")`
+##### `socket.emit("new message")`
+###### Params
+`message`: The input of the textbox
+
+###### Functions
+Sends a request to the server to broadcast the user his message to the server
+
+##### `socket.on("typing")`
+###### Params
+`Typing`: Boolean, indicates where the user is still typing or not 
+`Message`: Message which will be broadcasted to the other users in the room
+
+###### Functions
+Broadcasts the typing message
 

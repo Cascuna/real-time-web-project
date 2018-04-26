@@ -154,12 +154,23 @@ function socketConnection(socket) {
     var userApi = generateSpotifyAPIObject();
     userApi.setAccessToken(userKeyPairs[data.user].spotifyCode);
     userApi.setRefreshToken(userKeyPairs[data.user].spotifyRefresh);
-
-    spotifyApi.createPlaylist("mr_vanderwal", data.room, { public: true }).then(
+    console.log("testing");
+    spotifyApi.getMe().then(
       function(data) {
-        console.log("Created playlist!", data);
-        spotifySessionRoomPair[data.room] = { id: data.body.id };
-        console.log(data.body.id);
+        console.log("testinggggggggg", data.body);
+        spotifyApi
+          .createPlaylist("mr_vanderwal", data.room, { public: true })
+          .then(
+            function(data) {
+              console.log("Created playlist!", data);
+              spotifySessionRoomPair[data.room] = { id: data.body.id };
+              console.log(data.body.id);
+            },
+            function(err) {
+              console.log("Something went wrong!", err);
+            }
+          );
+        console.log("Some information about the authenticated user", data.body);
       },
       function(err) {
         console.log("Something went wrong!", err);
