@@ -1,7 +1,11 @@
 {% extends 'includes/main.html' %}
 
 {% block body %}
-    <header> <a class='button' href='auth/login'> Login with Spotify </a> </header>
+    <header> 
+        {% if user %} <b>Welcome {{user}}!</b>
+        {% else %} <a class='button' href='{{ spotifyUrl }}' id='spotify-link'> Login with Spotify </a> 
+        {% endif %} 
+    </header>
     <aside class='playlist-view'> </aside>
     <main> </main>
     <aside class='user-view'> </aside>
