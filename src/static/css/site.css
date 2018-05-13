@@ -16,6 +16,27 @@ aside {
     background-color: orange;
 }
 
+.chat{ 
+    display: grid;
+    grid-template-columns: 10fr;
+    grid-template-rows: 9fr 1fr;
+}
+
+form .message-input {
+    width: 80%;
+    height: 100%;
+}
+
+form #message-submit {
+    width: 19%;
+    height: 100%;
+}
+
+.auto-complete {
+    background-color: red;
+    width: 80%;
+}
+
 header {
     grid-column: 1 / span 3;
     background-color: plum;

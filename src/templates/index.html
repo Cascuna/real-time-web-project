@@ -7,8 +7,19 @@
         {% endif %} 
     </header>
     <aside class='playlist-view'> </aside>
-    <main> </main>
-    <aside class='user-view'> </aside>
+    <main class='chat'> 
+        <ul></ul>
+        <form action="." method="post">
+            
+            <input type="text" name="message" id="message" class="message-input" list='huge_list'>
+            <datalist id="huge_list">
+            </datalist>
+            <button type="submit" id="message-submit">Zet dit nummer in de queue</button>
+        </form>
+    </main>
+    <aside class='user-view'>
+        <header><h2>Current users online</h2></header>
+        <ul id='online-users'></ul> </aside>
     <div id='spotify-player'> </div>
 
 {% endblock %}

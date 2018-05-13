@@ -1,6 +1,7 @@
 const spotifyWebApi = require("spotify-web-api-node");
 const io = require("../server");
 const config = require("../config").get(process.env.NODE_ENV);
+const sessionConfig = config.socket.session;
 const spotifyApiInterface = newSpotifyApiInstance();
 
 function newSpotifyApiInstance() {
@@ -15,7 +16,6 @@ exports.generateUserSpotifyApiInstance = function generateUserSpotifyApiInstance
   access_token,
   refresh_token
 ) {
-  console.log(access_token, refresh_token);
   const userApiInstance = newSpotifyApiInstance();
   userApiInstance.setAccessToken(access_token);
   userApiInstance.setRefreshToken(refresh_token);
@@ -24,7 +24,6 @@ exports.generateUserSpotifyApiInstance = function generateUserSpotifyApiInstance
 
 exports.generateSpotifyUrl = function generateSpotifyUrl() {
   return spotifyApiInterface.createAuthorizeURL(config.spotifyAuth.scopes);
-  console.log(authorizeURL);
 };
 
 exports.callback = function callback(request, response) {
@@ -47,4 +46,10 @@ exports.callback = function callback(request, response) {
         "No code parameter, please ensure the authentication went correctly."
       );
   }
+};
+
+exports.userLoggedIn = function userLoggedIn(socket) {
+  io.io.sockets.emit("user logged in", {
+    user: socket.handshake.session[sessionConfig.user]
+  });
 };

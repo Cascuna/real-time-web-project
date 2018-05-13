@@ -1,6 +1,15 @@
 require("dotenv").config();
 var config = {
   default: {
+    socket: {
+      /* Saving session namespaces here so they are easily accesible 
+       throughout the application */
+      session: {
+        namespace: "socket",
+        spotifyApi: "spotifyApi",
+        user: "spotifyUser"
+      }
+    },
     spotifyAuth: {
       clientId: process.env.SPOTIFY_CLIENT_ID,
       clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
@@ -19,6 +28,9 @@ var config = {
         "user-read-playback-state",
         "user-top-read"
       ]
+    },
+    redis: {
+      secret: process.env.REDIS_SECRET
     }
   }
 };
