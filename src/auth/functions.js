@@ -4,6 +4,8 @@ const config = require("../config").get(process.env.NODE_ENV);
 const sessionConfig = config.socket.session;
 const spotifyApiInterface = newSpotifyApiInstance();
 
+var devices = [];
+
 function newSpotifyApiInstance() {
   return new spotifyWebApi({
     clientId: config.spotifyAuth.clientId,
@@ -19,7 +21,32 @@ exports.generateUserSpotifyApiInstance = function generateUserSpotifyApiInstance
   const userApiInstance = newSpotifyApiInstance();
   userApiInstance.setAccessToken(access_token);
   userApiInstance.setRefreshToken(refresh_token);
+
   return userApiInstance;
+};
+
+exports.checkForPlaybackChanges = function checkForPlaybackChanges(socket) {
+  let userApi = socket.handshake.session.spotifyApi;
+  if (!socket.handshake.session.devices) {
+    socket.handshake.session.devices = [];
+  }
+  let sessionDevices = socket.handshake.session.devices;
+  userApi.getMyDevices().then(function(data) {
+    let updated = false;
+    console.log(sessionDevices);
+    for (device of data.body.devices) {
+      tempSessionDevices = sessionDevices.map(session => session.id);
+      if (!tempSessionDevices.includes(device.id)) {
+        sessionDevices.push(device);
+        updated = true;
+      }
+    }
+    if (updated) {
+      socket.emit("playback devices fetched", {
+        devices: sessionDevices
+      });
+    }
+  });
 };
 
 exports.generateSpotifyUrl = function generateSpotifyUrl() {
@@ -48,8 +75,18 @@ exports.callback = function callback(request, response) {
   }
 };
 
-exports.userLoggedIn = function userLoggedIn(socket) {
-  io.io.sockets.emit("user logged in", {
+exports.userLoggedIn = function userLoggedIn(socket, session) {
+  let devices = [];
+  socket.handshake.session.spotifyApi.getMyDevices().then(function(data) {
+    for (device of data.body.devices) {
+      console.log(device);
+      devices.push(device);
+    }
+    socket.emit("playback devices fetched", {
+      devices: devices
+    });
+  });
+  socket.emit("user logged in", {
     user: socket.handshake.session[sessionConfig.user]
   });
 };

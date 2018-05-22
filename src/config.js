@@ -7,7 +7,8 @@ var config = {
       session: {
         namespace: "socket",
         spotifyApi: "spotifyApi",
-        user: "spotifyUser"
+        user: "spotifyUser",
+        playback: "spotifyPlaybackDevice"
       }
     },
     spotifyAuth: {
@@ -17,6 +18,8 @@ var config = {
       scopes: [
         "user-read-private",
         "user-read-email",
+        "user-library-read",
+        "user-top-read",
         "playlist-read-private",
         "playlist-read-collaborative",
         "playlist-modify-public",

@@ -1,17 +1,17 @@
 const express = require("express");
 const app = express();
 const server = require("http").Server(app);
-const io = require("socket.io")(server);
+var io = require("socket.io")(server);
 const nunjucks = require("nunjucks");
 const router = express.Router();
 const auth = require("./auth/");
 const session = require("express-session");
-
+const queue = require("./queue/");
 const config = require("./config").get(process.env.NODE_ENV);
 const sessionConfig = config.socket.session;
 const FileStore = new session.MemoryStore();
 let userCount = 0;
-exports.io = io;
+
 // const sessionStore = new FileStore();
 const sessionMiddleWare = session({
   store: FileStore,
@@ -22,6 +22,7 @@ const sessionMiddleWare = session({
 
 app.use(sessionMiddleWare);
 
+// Allows us to have the FileStore binded to our socket in a persistent way once authenticated
 io.use(function(socket, next) {
   sessionMiddleWare(socket.handshake, socket.request.res, next);
 });
@@ -45,80 +46,101 @@ function serverConnected() {
   console.log("available on http://127.0.0.1:3000");
 }
 
-// function writeToSession(socket, key, value) {
-//   let currentSession = socket.handshake.session;
-//   if (!currentSession) {
-//     return;
-//   }
-//   currentSession[key] = value;
-// }
-
-io.on("connection", function(socket) {
+function socketConnection(socket) {
+  // TODO: I'm not sure why, but exporting my IO via exports. isn't working, which forces me to work around it this way
+  socket.io = io;
+  let playbackPolling;
   let currentSession = socket.handshake.session;
-  // console.log(socket.handshake.sessionStore.all());
-  let activeUsers = [];
+  let authenticatedUsers = [];
+
+  function activatePolling() {
+    playbackPolling = activatePolling();
+    setInterval(function() {
+      auth.functions.checkForPlaybackChanges(socket);
+    }, 3200);
+  }
+  function clearPolling() {
+    clearInterval(playbackPolling);
+  }
+
   for (let [key, session] of Object.entries(FileStore.sessions)) {
     session = JSON.parse(session);
     if (session[sessionConfig.user]) {
-      activeUsers.push(session[sessionConfig.user]);
+      authenticatedUsers.push(session[sessionConfig.user]);
     }
   }
-  if (activeUsers.length != userCount) {
-    io.sockets.emit("update user view", activeUsers);
-    userCount = activeUsers.length;
+  if (authenticatedUsers.length != userCount) {
+    io.sockets.emit("update user view", authenticatedUsers);
+    userCount = authenticatedUsers.length;
   }
-  if (currentSession[sessionConfig.user]) {
-    auth.functions.userLoggedIn(socket);
+  currentSession[sessionConfig.spotifyApi];
+  if (currentSession[sessionConfig.spotifyApi]) {
+    spotifyApi = auth.functions.generateUserSpotifyApiInstance(
+      currentSession.access_token,
+      currentSession.refresh_token
+    );
+
+    currentSession[sessionConfig.spotifyApi] = spotifyApi;
+    auth.functions.userLoggedIn(socket, session);
+    // activatePolling();
   }
+  queue.queue.RetrieveQueue(socket);
 
   socket.on("disconnect", function(data) {
     if (currentSession[sessionConfig.user]) {
       userCount--;
+      clearPolling();
     }
   });
   socket.on("user authenticated", function(data) {
+    currentSession.access_token = data.access_token;
+    currentSession.refresh_token = data.refresh_token;
     spotifyApi = auth.functions.generateUserSpotifyApiInstance(
-      data.access_token,
-      data.refresh_token
+      currentSession.access_token,
+      currentSession.refresh_token
     );
     currentSession[sessionConfig.spotifyApi] = spotifyApi;
 
     currentSession.spotifyApi.getMe().then(data => {
+      console.log(data.body);
       currentSession[sessionConfig.user] = data.body.id;
       currentSession.save();
-      activeUsers.push(currentSession[sessionConfig.user]);
-      io.sockets.emit("update user view", activeUsers);
-      auth.functions.userLoggedIn(socket);
+      authenticatedUsers.push(currentSession[sessionConfig.user]);
+      io.sockets.emit("update user view", authenticatedUsers);
+      auth.functions.userLoggedIn(socket, session);
+      // activatePolling();
     });
   });
 
-  socket.on("add song to queue", function(song) {
-    let deviceId;
-    currentSession[sessionConfig.spotifyApi].getMyDevices().then(
-      data => {
-        for (device of data.body.devices) {
-          if (device.is_active) {
-            deviceId = device.id;
-            currentSession[sessionConfig.spotifyApi]
-              .play({
-                device_id: deviceId,
-                uris: [song]
-              })
-              .then(() => console.log("we gaan hard"), err => console.log(err));
-            break;
-          }
+  socket.on("new active playback device", function(device) {
+    currentSession[sessionConfig.playback] = device;
+    console.log("new playback ativate");
+    currentSession[sessionConfig.spotifyApi]
+      .transferMyPlayback({
+        deviceIds: [device],
+        play: true
+      })
+      .then(
+        result => {
+          console.log(result);
+        },
+        error => {
+          console.log(error);
         }
-      },
-      function(err) {
-        console.log(err);
-      }
-    );
-    // console.log("song_id", song);
-    // currentSession[sessionConfig.spotifyApi].getMyDevices().then()
+      );
+  });
+
+  socket.on("add song to queue", function(song) {
+    queue.queue.addToQueue(song, socket);
+  });
+  // console.log("song_id", song);
+  // currentSession[sessionConfig.spotifyApi].getMyDevices().then()
+
+  socket.on("play next in queue", function() {
+    queue.queue.playNextSong(socket);
   });
 
   socket.on("auto complete query", function(query) {
-    // TODO: Clean this shit up
     let completedAmount = 15;
 
     currentSession[sessionConfig.spotifyApi].searchTracks(query).then(
@@ -143,6 +165,12 @@ io.on("connection", function(socket) {
       }
     );
   });
-});
+}
+
+io.on("connection", socketConnection);
 
 server.listen(3000, "0.0.0.0", serverConnected);
+
+exports.FileStore = FileStore;
+
+exports.io = io;
