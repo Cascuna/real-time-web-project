@@ -5,7 +5,7 @@
     - [Feature list](#feature-list)
     - [Wish list](#wish-list)
     - [Requirements](#requirements)
-    - [Install guide](#install-guide)
+    - [Install guidenew a](#install-guidenew-a)
     - [Dependencies](#dependencies)
         - [Api's](#apis)
     - [Internals](#internals)
@@ -19,6 +19,7 @@
             - ['current song playing' (`currentSong`)](#current-song-playing-currentsong)
             - ['play next in queue' (`none`)](#play-next-in-queue-none)
             - ['Typing´ (`Typing, message`)](#typing-typing--message)
+            - ['new active playback device', (`device`)](#new-active-playback-device--device)
             - ['user authenticated' (`data -> access_code, refresh_token`)](#user-authenticated-data---access-code--refresh-token)
             - ['User logged in' (`userName`)](#user-logged-in-username)
             - ['update spotify related ui' (`queue`, `currentSong`)](#update-spotify-related-ui-queue--currentsong)
@@ -57,7 +58,7 @@ Reasoning behind this is that I personally find the MVC document structure most 
 `node` minimal version `v8.9.4`
 
 
-## Install guide
+## Install guidenew a
 ```cd app```
 Then you can do 
 ```npm install```
@@ -120,10 +121,20 @@ Notifies all users that the song has changed and there is a new in queue to be p
 `emit (Clientsided)`  
 notify the server that the new song in the queue can be played.
 
+
+
 #### 'Typing´ (`Typing, message`)
-`on (Clientsided)`
 **Typing** - Indicates wheter the user is still typing
 **Message** - message that is being shown to the users not typing
+`on (Clientsided)`
+
+
+#### 'new active playback device', (`device`)
+**Device** - User changed his active playback-device
+`on (Serversided)`
+Adds the new device to user his session, and transfers the playbacksession to the device.
+
+
 
 
 #### 'user authenticated' (`data -> access_code, refresh_token`)
