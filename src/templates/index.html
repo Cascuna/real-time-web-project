@@ -1,0 +1,42 @@
+{% extends 'includes/main.html' %}
+
+{% block body %}
+<span id='server-not-connected-message' class='hidden'>
+        U bent niet verbonden met de server. Controleer uw internet verbinding, of neem contact op met de server beheerder 
+</span>
+    <header> 
+        
+        {% if user %}
+        <select>
+            
+        </select>
+        <b id='welcome-text'>{{user}}!</b>
+    
+        {% else %} <a class='button' href='{{ spotifyUrl }}' id='spotify-link'> Login with Spotify </a> 
+        {% endif %} 
+    </header>
+    <aside class='playlist-view' id='playlist-view'>
+        <header><h2>Current queue</h2></header> 
+   
+    </aside>
+    <main id='chat-chat' class='chat'> 
+        <ul id="messages"> </ul>
+        <div>
+        <form id="chatbar" action='' method='get'>
+            <input type='text' name='text' id='message_input' placeholder="Type your text here"> <button id='send_message'> Send </button>
+        
+        </form>
+        <form action="." method="post" id='music-form' class='hidden'>
+            <input type="text" name="message" id="message" class="message-input" list='huge_list' placeholder="Type a song to add to the queue">
+            <datalist id="huge_list">
+            </datalist>
+            <button type="submit" id="message-submit">Zet dit nummer in de queue</button>
+        </form>
+    </div>
+    </main>
+    <aside class='user-view'>
+        <header><h2>Online users</h2></header>
+        <ul id='online-users'></ul> </aside>
+    <div id='spotify-player'> </div>
+
+{% endblock %}
