@@ -14,7 +14,9 @@
             - ['update user list', (`authenticatedUsers`)](#update-user-list--authenticatedusers)
             - ['connect', (none)](#connect--none)
             - ['connect_error', (none)](#connect-error--none)
+            - ['song rated', (songId, rating)](#song-rated--songid--rating)
             - ['disconnect', (none)](#disconnect--none)
+            - ['current song playing' (`currentSong`)](#current-song-playing-currentsong)
             - ['user authenticated' (`data -> access_code, refresh_token`)](#user-authenticated-data---access-code--refresh-token)
             - ['User logged in' (`userName`)](#user-logged-in-username)
             - ['update spotify related ui' (`queue`, `currentSong`)](#update-spotify-related-ui-queue--currentsong)
@@ -88,9 +90,31 @@ Checks on connection if the server is online
 `on (Clientsided)`
 Gets received if the server crashes
 
+
+#### 'song rated', (songId, rating)
+**SongId** - The identifier of the song to give the rating
+**Rating** - What value the song has  
+
+`on (Clientsided)`
+Updates the song card for the viewer to reflect rating
+
+`emit (Serversided)`
+Tells all active lclients that a song's rating has been changed
+
 #### 'disconnect', (none)
 `on (Serversided)`   
 Checks if the user is authenticated, removes him from the userlist if this is true.
+
+#### 'current song playing' (`currentSong`)
+**CurrentSong** - Contains information about the song that is currently playing, like playback data and card information  
+
+`on (Clientsided)`  
+Adds player interface with the song that needs to be played for the user 
+
+`emit (Serversided)`
+Notifies all users that the song has changed and there is a new in queue to be played  
+
+
 
 #### 'user authenticated' (`data -> access_code, refresh_token`)
 **access_code** - Code received from spotify on succesful authentication  

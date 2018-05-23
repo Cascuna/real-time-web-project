@@ -68,15 +68,25 @@ class Queue {
   }
 
   RetrieveQueue(socket) {
-    console.log("we in here");
-    console.log(this.currentlyPlaying);
+    // console.log(this.currentlyPlaying);
+    if (socket.handshake.session.spotifyApi) {
+      console.log("currplaying uri", this.currentlyPlaying.song.uri);
+      socket.handshake.session.spotifyApi.play({
+        device_id: socket.handshake.session[sessionConfig.playback],
+        uris: [this.currentlyPlaying.song.uri],
+        offset: { position: this.currentlyPlaying.timeStarted }
+      });
+    }
+
     socket.emit("update spotify related ui", {
       queue: this.queue,
       currentSong: this.currentlyPlaying
     });
-    for (queueItem in this.queue) {
-      console.log("queue item", queueItem);
-      rateSong(socket, queueItem.songId, "none");
+    if (this.queue) {
+      for (let queueItem in this.queue) {
+        console.log("queue item", queueItem);
+        // this.rateSong(socket, queueItem.songId, "none");
+      }
     }
   }
 
