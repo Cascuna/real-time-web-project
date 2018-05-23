@@ -70,7 +70,7 @@ function socketConnection(socket) {
     }
   }
   if (authenticatedUsers.length != userCount) {
-    io.sockets.emit("update user view", authenticatedUsers);
+    io.sockets.emit("update user list", authenticatedUsers);
     userCount = authenticatedUsers.length;
   }
   currentSession[sessionConfig.spotifyApi];
@@ -86,7 +86,7 @@ function socketConnection(socket) {
   }
   queue.queue.RetrieveQueue(socket);
 
-  socket.on("disconnect", function(data) {
+  socket.on("disconnect", function() {
     if (currentSession[sessionConfig.user]) {
       userCount--;
       clearPolling();
@@ -106,9 +106,34 @@ function socketConnection(socket) {
       currentSession[sessionConfig.user] = data.body.id;
       currentSession.save();
       authenticatedUsers.push(currentSession[sessionConfig.user]);
-      io.sockets.emit("update user view", authenticatedUsers);
+      io.sockets.emit("update user list", authenticatedUsers);
       auth.functions.userLoggedIn(socket, session);
       // activatePolling();
+    });
+  });
+
+  socket.on("typing", function(data) {
+    context = {
+      message: "",
+      typing: false
+    };
+    if (data.typing === true) {
+      context.message = `${currentSession[sessionConfig.user]} is typing...`;
+      context.typing = true;
+    }
+    io.sockets.emit("typing", context);
+  });
+
+  socket.on("rate song", function(data) {
+    queue.queue.RateSong(socket, data.songId, data.rating);
+  });
+
+  socket.on("new message", function(data) {
+    console.log("hi");
+    io.sockets.emit("new message", {
+      message: data.message,
+      user: currentSession[sessionConfig.user]
+      // user_color: socket.color
     });
   });
 

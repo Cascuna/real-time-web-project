@@ -8,6 +8,8 @@ class Queue {
   constructor() {
     this.currentlyPlaying = false;
     this.queue = [];
+    this.scoreBoard = {};
+    this.unsortedRatings = [];
     this.io = io;
   }
 
@@ -17,12 +19,13 @@ class Queue {
     socket.handshake.session.spotifyApi.getTrack(id, {}).then(
       details => {
         this.queue.push({
+          songId: id,
           uri: song,
           details: details.body,
           userName: socket.handshake.session[sessionConfig.user]
         });
         console.log(socket.handshake.session[sessionConfig.user]);
-        socket.io.sockets.emit("no name yet", {
+        socket.io.sockets.emit("create song card", {
           details: details.body,
           userName: socket.handshake.session[sessionConfig.user]
         });
@@ -36,8 +39,37 @@ class Queue {
     );
   }
 
+  calcRate(song_id, socket) {
+    let songScore = 0;
+    console.log(this.scoreBoard[song_id]);
+    for (let [key, rating] of Object.entries(this.scoreBoard[song_id])) {
+      console.log(key, rating);
+      rating == "like" ? songScore++ : songScore--;
+    }
+    this.unsortedRatings[song_id] = songScore;
+
+    // nxtSongValue = this.queue.find(song => song.songId == wantedKey);
+
+    socket.io.sockets.emit("song rated", {
+      rating: songScore,
+      songId: song_id
+    });
+  }
+
+  RateSong(socket, song_id, rating) {
+    let user = socket.handshake.session[sessionConfig.user];
+    if (!this.scoreBoard[song_id]) {
+      this.scoreBoard[song_id] = {};
+    }
+    if (this.scoreBoard[song_id][user] !== rating) {
+      this.scoreBoard[song_id][user] = rating;
+      this.calcRate(song_id, socket);
+    }
+  }
+
   RetrieveQueue(socket) {
     console.log("we in here");
+    console.log(this.currentlyPlaying);
     socket.emit("update spotify related ui", {
       queue: this.queue,
       currentSong: this.currentlyPlaying
@@ -45,8 +77,37 @@ class Queue {
   }
 
   playNextSong(socket) {
-    let nextSong = this.queue.shift();
-    console.log(nextSong);
+    let nextSong;
+    let nxtSongValue = "";
+    console.log(this.unsortedRatings.length);
+    if (this.unsortedRatings.length > 0) {
+      let keysSorted = Object.keys(this.unsortedRatings).sort((a, b) => {
+        return this.unsortedRatings[a] - this.unsortedRatings[b];
+      });
+      let neededKey = keysSorted.pop();
+      nextSong = this.queue.find(song => song.songId == neededKey);
+    } else {
+      nextSong = this.queue.shift();
+    }
+    // let nextSong;
+    // console.log(this.unsortedRatings);
+    // if (this.unsortedRatings > 0) {
+    //   console.log("unsorted ratings", this.unsortedRatings);
+
+    //   let keysSorted = Object.keys(this.unsortedRatings).sort((a, b) => {
+    //     return this.unsortedRatings[a] - this.unsortedRatings[b];
+    //   });
+    //   console.log("sorted", keysSorted);
+    //   neededKey = keysSorted.pop();
+    //   console.log(queue.find(song => song.songId == wantedKey));
+    //   nxtSongValue = queue.find(song => song.songId == wantedKey);
+    // } else {
+    //   nxtSongValue = this.queue.shift();
+    // }
+    // if (nxtSongValue) {
+    //   nextSong = nxtSongValue;
+    // }
+
     if (!nextSong) {
       console.log("no songs!");
       this.currentlyPlaying = "";

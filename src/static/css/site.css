@@ -116,8 +116,17 @@ header .button:hover {
 
 
 
-.artistName {
+.large .artistName {
     grid-column: 2;
+    grid-row: 3;
+}
+
+.large .songName {
+    grid-row: 2;
+}
+
+.large .addedBy {
+    grid-row: 4;
 }
 
 li {
