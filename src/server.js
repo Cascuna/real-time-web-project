@@ -54,8 +54,7 @@ function socketConnection(socket) {
   let authenticatedUsers = [];
 
   function activatePolling() {
-    playbackPolling = activatePolling();
-    setInterval(function() {
+    playbackPolling = setInterval(function() {
       auth.functions.checkForPlaybackChanges(socket);
     }, 3200);
   }
@@ -82,7 +81,7 @@ function socketConnection(socket) {
 
     currentSession[sessionConfig.spotifyApi] = spotifyApi;
     auth.functions.userLoggedIn(socket, session);
-    // activatePolling();
+    activatePolling();
   }
   queue.queue.RetrieveQueue(socket);
 
@@ -108,8 +107,8 @@ function socketConnection(socket) {
       authenticatedUsers.push(currentSession[sessionConfig.user]);
       io.sockets.emit("update user list", authenticatedUsers);
       auth.functions.userLoggedIn(socket, session);
-      // activatePolling();
     });
+    activatePolling();
   });
 
   socket.on("typing", function(data) {
