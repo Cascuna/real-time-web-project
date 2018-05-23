@@ -74,6 +74,10 @@ class Queue {
       queue: this.queue,
       currentSong: this.currentlyPlaying
     });
+    for (queueItem in this.queue) {
+      console.log("queue item", queueItem);
+      rateSong(socket, queueItem.songId, "none");
+    }
   }
 
   playNextSong(socket) {

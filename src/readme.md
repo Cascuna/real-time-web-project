@@ -1,3 +1,23 @@
+- [Real Time Web](#real-time-web)
+    - [Purpose of the app](#purpose-of-the-app)
+    - [What did I change, what was my focus](#what-did-i-change--what-was-my-focus)
+    - [Style of the project](#style-of-the-project)
+    - [Feature list](#feature-list)
+    - [Wish list](#wish-list)
+    - [Requirements](#requirements)
+    - [Install guide](#install-guide)
+    - [Dependencies](#dependencies)
+        - [Api's](#apis)
+    - [Internals](#internals)
+        - [Data persistence](#data-persistence)
+            - [Socket endpoints](#socket-endpoints)
+            - ['update user list', (`authenticatedUsers`)](#update-user-list--authenticatedusers)
+            - ['connect', (none)](#connect--none)
+            - ['connect_error', (none)](#connect-error--none)
+            - ['disconnect', (none)](#disconnect--none)
+            - ['user authenticated' (`data -> access_code, refresh_token`)](#user-authenticated-data---access-code--refresh-token)
+            - ['User logged in' (`userName`)](#user-logged-in-username)
+            - ['update spotify related ui' (`queue`, `currentSong`)](#update-spotify-related-ui-queue--currentsong)
 # Real Time Web
 ![Main image](main-image.png)
 
@@ -52,13 +72,21 @@ Every Socket.IO connection has a persistence session. What keys are being used f
 
 This session is *required* for the app to run correctly, as it stores all needed data to communicate with the spotify API.
 
-
+#### Socket endpoints
 #### 'update user list', (`authenticatedUsers`)
 `emit (Serversided)`  
 **AuthenticatedUsers** - A collection of all users that have authenticated with spotify. Gets fetched from the session's `filestore`  
 `on (Clientsided) `  
 Populates the '**current users online**' list with the users their `spotify_id's`
 
+#### 'connect', (none)
+`on (Clientsided)`
+Checks on connection if the server is online
+
+
+#### 'connect_error', (none)
+`on (Clientsided)`
+Gets received if the server crashes
 
 #### 'disconnect', (none)
 `on (Serversided)`   
@@ -85,4 +113,17 @@ Sends the username to the client to show a welcome message & notify the other us
 
 `on (Clientside)`  
 Creates a welcome message for the user & notifies people in the chat the user joined
+
+
+#### 'update spotify related ui' (`queue`, `currentSong`)
+
+**queue** - Current queue of songs, contains all info needed to display cards correctly 
+**CurrentSong** - Contains information about the song that is currently playing, like playback data and card information  
+`on (Clientside)`
+Constructs the currently playing bar so the user knows what the song it's progress is
+`emit (Serverside)`
+When a socket connects, it fetches the currentSong & queue 
+
+
+
 

@@ -51,6 +51,15 @@
       deviceOption.appendChild(text);
       playbackDevices.appendChild(deviceOption);
     }
+    console.log(data.devices.length);
+    if (data.devices.length === 0) {
+      var deviceOption = document.createElement("option");
+      var text = document.createTextNode(
+        "Geen playback apparaten beschikbaar, zet er 1 aan"
+      );
+      deviceOption.appendChild(text);
+      playbackDevices.appendChild(deviceOption);
+    }
     document.getElementsByTagName("header")[0].appendChild(playbackDevices);
     hookPlaybackListener();
   });
@@ -175,10 +184,6 @@
   socket.on("create song card", function(details) {
     console.log(details);
     createPlaylistCard(details);
-
-    let likebutton = document.getElementById("like-" + details.details.id);
-    console.log(likebutton);
-    likebutton.addEventListener("onclick", rateSong);
   });
 
   var totalRunTime = 0;
@@ -268,9 +273,39 @@
       console.log(nextSong.userName);
       let addedBy = document.createElement("div");
       addedBy.innerHTML = "added by" + nextSong.userName;
+      let rs = function rateSong(event) {
+        let currTarget = event.target;
+        socket.emit("rate song", {
+          songId: currTarget.getAttribute("data-id"),
+          rating: currTarget.value
+        });
+      };
+
+      let dislike = document.createElement("button");
+      dislike.value = "dislike";
+      dislike.innerHTML = "dislike";
+      dislike.setAttribute("data-id", nextSong.details.id);
+
+      let like = document.createElement("button");
+      like.value = "like";
+      like.setAttribute("data-id", nextSong.details.id);
+
+      like.onclick = rs;
+      dislike.onclick = rs;
+      like.innerHTML = "like";
+
+      let likeCount = document.createElement("span");
+      likeCount.classList.add("like-counter");
+
+      let scoreBar = document.createElement("div");
+
+      scoreBar.appendChild(like);
+      scoreBar.appendChild(dislike);
+      scoreBar.appendChild(likeCount);
       div.appendChild(songName);
       div.appendChild(artistName);
       div.appendChild(addedBy);
+      div.appendChild(scoreBar);
       songsContainer = div;
     }
 
