@@ -17,11 +17,13 @@
             - ['song rated', (songId, rating)](#song-rated--songid--rating)
             - ['disconnect', (none)](#disconnect--none)
             - ['current song playing' (`currentSong`)](#current-song-playing-currentsong)
+            - ['play next in queue' (`none`)](#play-next-in-queue-none)
+            - ['Typing´ (`Typing, message`)](#typing-typing--message)
             - ['user authenticated' (`data -> access_code, refresh_token`)](#user-authenticated-data---access-code--refresh-token)
             - ['User logged in' (`userName`)](#user-logged-in-username)
             - ['update spotify related ui' (`queue`, `currentSong`)](#update-spotify-related-ui-queue--currentsong)
 # Real Time Web
-![Main image](main-image.png)
+Link to the website: http://forum.alexvanderwal.amsterdam:3000/
 
 ## Purpose of the app
 A fun 'get-together' spotify app where you can compile a playlist of songs with a group, and enjoy those tunes together!
@@ -40,7 +42,7 @@ Reasoning behind this is that I personally find the MVC document structure most 
 - Add your favourite songs to the queue
 - Rate other people their choices to influence the queue
 - Scold other people in chat for their horrible choices
-- song auto completion
+- song auto completiontyping
 - Persistent user data, so you only have to login once!
 
 ## Wish list
@@ -114,6 +116,14 @@ Adds player interface with the song that needs to be played for the user
 `emit (Serversided)`
 Notifies all users that the song has changed and there is a new in queue to be played  
 
+#### 'play next in queue' (`none`)
+`emit (Clientsided)`  
+notify the server that the new song in the queue can be played.
+
+#### 'Typing´ (`Typing, message`)
+`on (Clientsided)`
+**Typing** - Indicates wheter the user is still typing
+**Message** - message that is being shown to the users not typing
 
 
 #### 'user authenticated' (`data -> access_code, refresh_token`)
