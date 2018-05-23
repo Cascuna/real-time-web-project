@@ -2,10 +2,10 @@
 ![Main image](main-image.png)
 
 ## Purpose of the app
-A fun 'get-together' spotify app where you can compile a playlist of songs with a group, and 
+A fun 'get-together' spotify app where you can compile a playlist of songs with a group, and enjoy those tunes together!
 
-## Challenges I faced
-The architecture of the project wasn't superB, which introduced allot more bugs as I continued developing. The problem with this is that the whole application is quite buggy, and I haven't really reached the point I want the application to be in. This together with the complexity of getting the access key from a callback really threw me off.
+## What did I change, what was my focus
+The previous iteration of this concept grew out of control, partially due to my lack of knowledge about creating a accesstoken in a new tab, and delegating this to the socket it's active homepage to hugely decrease the complexity of it. I've also caught wind about how to do leverage Express sessions myself, which allowed me to spend more time on the spotify implementation. For said implementation I primairly focused on making a shared experience, allowing all users to see what songs are playing to create a incentive to log on. They are also able to change the score of the song which manipulates the data for all users. Personally I think with this i've reached a level of understanding about sockets and oauth in general which will be hugely beneficial moving forward.
 
 ## Style of the project
 For the general codestyle I decided to adhere to the [google style guide](https://google.github.io/styleguide/jsguide.html). This is because it's fairly new and is a bit different then my current coding style, which is mostly based of the airbnb styleguide. With this i hope to be able to slowly form my own coding style.
@@ -14,10 +14,16 @@ As for the document structure I decided to use [risingstacks](https://blog.risin
 Reasoning behind this is that I personally find the MVC document structure most sources recommend quite cluttered, and I prefer to create my app parts as encapsulated as possible.  Down the line i'll probably divert from risingstacks structure slightly, and will document my adaptations here. 
 
 ## Feature list
-
 - Choose your playback device to listen on!
 - Add your favourite songs to the queue
 - Rate other people their choices to influence the queue
+- Scold other people in chat for their horrible choices
+- song auto completion
+- Persistent user data, so you only have to login once!
+
+## Wish list
+- DJ mode, make a user responsible for the queue
+- Export all songs played as a playlist
 
 
 
@@ -35,7 +41,7 @@ Finally
 ```npm start```
 
 ## Dependencies
-The product has been based upon the socket implementation by of `socket.io`.  
+The product has been based upon the socket implementation by of `socket.io` inside a 'express' app. The project also heavily leverages express sessions
 ### Api's
 To flair up the functionality, i'm using the [spotify api](https://developer.spotify.com/web-api/) through the ever so handy [spotify-web-api-node](https://github.com/thelinmichael/spotify-web-api-node) node package.
 
