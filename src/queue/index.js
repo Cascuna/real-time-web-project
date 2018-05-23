@@ -73,8 +73,8 @@ class Queue {
       console.log("currplaying uri", this.currentlyPlaying.song.uri);
       socket.handshake.session.spotifyApi.play({
         device_id: socket.handshake.session[sessionConfig.playback],
-        uris: [this.currentlyPlaying.song.uri],
-        offset: { position: this.currentlyPlaying.timeStarted }
+        uris: [this.currentlyPlaying.song.uri]
+        // offset: { position: this.currentlyPlaying.timeStarted }
       });
     }
 
